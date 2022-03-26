@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "axios": "^0.26.1",
+    "inquirer": "^8.2.2",
+    "progress": "^2.0.3"
+  },
+  "name": "sber-zvuk",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ."
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
