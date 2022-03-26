@@ -81,19 +81,22 @@ const ProgressBar = require('progress');
     // Check dir
     let download_path;
     if (type === 'tracks') { // Для треков и плейлистов каждый раз нужно качать обложку, ибо она может различаться
-      if (!fs.existsSync(`${folder}/${track.artist_names[0]}`));
-        fs.mkdirSync(`${folder}/${track.artist_names[0]}`);
+      
+      if (!await fs.promises.stat(`${folder}/${track.artist_names[0]}`))
+        await fs.promises.mkdir(`${folder}/${track.artist_names[0]}`);
       download_path = `${folder}/${track.artist_names[0]}`;
     }
     if (type === 'releases') {// При первом создании альбомных папок можно наверн сразу качать обложку
-      if (!fs.existsSync(`${folder}/${title}/${track.release_title}`));
-        fs.mkdirSync(`${folder}/${title}/${track.release_title}`, { recursive: true });
+      if (!await fs.promises.stat(`${folder}/${title}}`))
+        await fs.promises.mkdir(`${folder}/${title}}`);
+      if (!await fs.promises.stat(`${folder}/${title}/${track.release_title}`))
+        await fs.promises.mkdir(`${folder}/${title}/${track.release_title}`);
       download_path = `${folder}/${title}/${track.release_title}`;
     }
 
     if (type === 'playlists') {
-      if (!fs.existsSync(`${folder}/${title}`))
-        fs.mkdirSync(`${folder}/${title}`);
+      if (!await fs.promises.stat(`${folder}/${title}`))
+        await fs.promises.mkdir(`${folder}/${title}`);
       download_path = `${folder}/${title}`;
     }
     //
