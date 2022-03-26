@@ -54,7 +54,14 @@ const ProgressBar = require('progress');
         count = download_query.length;
       }
     }
-    else if (response.data.result.tracks[track_id]) download_query.push(response.data.result.tracks[track_id]);
+    else if (parsedLink[1] === 'playlists' && response.data.result.playlists[parsedLink[2]]) {
+      const tracks = (await axios(`https://sber-zvuk.com/sapi/meta?tracks=${response.data.result.playlists[parsedLink[2]].track_ids.join(',')}&include=(track%20(release%20label)%20artist)`, { method: 'get', headers: {'x-auth-token': token} })).data.result.tracks;
+      for (const [key, value] of Object.entries(tracks)) {
+        download_query.push(value);
+        count = download_query.length;
+      }
+    }
+    else if (response.data.result.tracks[parsedLink[2]]) download_query.push(response.data.result.tracks[parsedLink[2]]);
     else {
       console.log('Track not found.');
       return search();
@@ -85,15 +92,16 @@ const ProgressBar = require('progress');
     }
 
     if (type === 'playlists') {
-      if (!fs.existsSync(`${folder}/${title}`));
+      if (!fs.existsSync(`${folder}/${title}`))
         fs.mkdirSync(`${folder}/${title}`);
       download_path = `${folder}/${title}`;
     }
     //
 
     // Get stream url
-    const streamUrl = (await axios(`https://sber-zvuk.com/api/tiny/track/stream?id=${track.id}&quality=${track.highest_quality === 'flac' ? quality : track.highest_quality !== quality && track.highest_quality === 'mid' ? 'mid' : 'high'}`, { headers: { 'x-auth-token': token } })).data.result.stream;
-    const { data, headers } = await axios(streamUrl, {
+    const streamUrl = (await axios(`https://sber-zvuk.com/api/tiny/track/stream?id=${track.id}&quality=${track.highest_quality === 'flac' ? quality : track.highest_quality !== quality && track.highest_quality === 'mid' ? 'mid' : 'high'}`, { headers: { 'x-auth-token': token } }));
+    if (!streamUrl) return;
+    const { data, headers } = await axios(streamUrl.data.result.stream, {
       method: 'get',
       responseType: 'stream'
     });
@@ -116,7 +124,7 @@ const ProgressBar = require('progress');
         }
       });
 
-    const writer = fs.createWriteStream(`${download_path}/${type === 'tracks' ? '' : track.position < 10 ? '0' + track.position + '. ' : track.position + '. '}${track.artist_names[0]} - ${track.title}.${streamUrl.includes('streamfl') ? 'flac' : 'mp3'}`);
+    const writer = fs.createWriteStream(`${download_path}/${type === 'tracks' ? '' : track.position < 10 ? '0' + track.position + '. ' : track.position + '. '}${track.artist_names[0]} - ${track.title}.${streamUrl.data.result.stream.includes('streamfl') ? 'flac' : 'mp3'}`);
     data.on('data', (chunk) => progressBar.tick(chunk.length));
     data.pipe(writer);
   }
