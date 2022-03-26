@@ -81,22 +81,17 @@ const ProgressBar = require('progress');
     // Check dir
     let download_path;
     if (type === 'tracks') { // Для треков и плейлистов каждый раз нужно качать обложку, ибо она может различаться
-      
-      if (!await fs.promises.stat(`${folder}/${track.artist_names[0]}`))
-        await fs.promises.mkdir(`${folder}/${track.artist_names[0]}`);
+        await fs.promises.mkdir(`${folder}/${track.artist_names[0]}`, { recursive: true });
       download_path = `${folder}/${track.artist_names[0]}`;
     }
     if (type === 'releases') {// При первом создании альбомных папок можно наверн сразу качать обложку
-      if (!await fs.promises.stat(`${folder}/${title}}`))
-        await fs.promises.mkdir(`${folder}/${title}}`);
-      if (!await fs.promises.stat(`${folder}/${title}/${track.release_title}`))
-        await fs.promises.mkdir(`${folder}/${title}/${track.release_title}`);
+      await fs.promises.mkdir(`${folder}/${title}}`, { recursive: true });
+      await fs.promises.mkdir(`${folder}/${title}/${track.release_title}`, { recursive: true });
       download_path = `${folder}/${title}/${track.release_title}`;
     }
 
     if (type === 'playlists') {
-      if (!await fs.promises.stat(`${folder}/${title}`))
-        await fs.promises.mkdir(`${folder}/${title}`);
+      await fs.promises.mkdir(`${folder}/${title}`, { recursive: true });
       download_path = `${folder}/${title}`;
     }
     //
