@@ -126,18 +126,18 @@ const ProgressBar = require('progress');
 
     if (link.includes('?')) link = link.slice(0, link.indexOf('?'));
     if (link.includes('&')) link = link.slice(0, link.indexOf('&'));
-    if (link.endsWith('/')) link = link.slice(0, -1)
+    if (link.endsWith('/')) link = link.slice(0, -1);
     let link_type, link_id;
 
     if (!link.includes('sber-zvuk.com')) return [link, link_type, link_id];
     if (link.search(/[/:]track[/:](.+)/g) != -1) {
       link_type = 'tracks';
       link_id = /[/:]track[/:](.+)/g.exec(link)[1];
-    } else if (link.search(/[/:]release[/:](.+)/g) != -1) {;
-      link_type = 'releases'
+    } else if (link.search(/[/:]release[/:](.+)/g) != -1) {
+      link_type = 'releases';
       link_id = /[/:]release[/:](.+)/g.exec(link)[1];
-    } else if (link.search(/[/:]playlist[/:](\d+)/g) != -1) {;
-      link_type = 'playlists'
+    } else if (link.search(/[/:]playlist[/:](\d+)/g) != -1) {
+      link_type = 'playlists';
       link_id = /[/:]playlist[/:](.+)/g.exec(link)[1];
     }
 
