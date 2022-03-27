@@ -121,14 +121,14 @@ export class Downloader {
             const coverPath = resolve(`${downloadPath}/${type !== "releases" ? track.title : "cover"}.jpg`);
             switch (extension) {
                 case "flac":
-                    this.flac.write(path, track, coverPath);
+                    this.flac.write(path, track, coverPath).then(() => this.download(type, title))
+                        .catch(() => null);
                     break;
                 case "mp3":
-                    this.id3.write(path, track, coverPath);
+                    this.id3.write(path, track, coverPath).then(() => this.download(type, title))
+                        .catch(() => null);
                     break;
             }
-
-            return this.download(type, title);
         });
         data.pipe(writer);
     };
