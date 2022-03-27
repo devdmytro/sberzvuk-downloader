@@ -2,5 +2,6 @@
   "token": "",
   "threads": 1,
   "quality": "",
-  "folder": "./Downloads"
+  "folder": "./Downloads",
+  "coverSize": "1024x1024"
 }

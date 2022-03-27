@@ -3,6 +3,10 @@ const inquirer = require('inquirer');
 const axios = require('axios');
 const fs = require('fs');
 const ProgressBar = require('progress');
+const ffmetadata = require("ffmetadata");
+const { resolve } = require("path");
+
+ffmetadata.setFfmpegPath(require('ffmpeg-static'));
 
 (async function(){
 
@@ -40,7 +44,6 @@ const ProgressBar = require('progress');
     const link = (await new Promise(resolve => {
       inquirer.prompt([{ type: 'input', name: 'link', message: 'Enter link to track/album/playlist:' }]).then(resolve);
     })).link;
-    console.log('\n')
     const parsedLink = parseLink(link);
     if (!parsedLink[1] || !parsedLink[2]) {
       console.log('Bad url.');
@@ -67,7 +70,7 @@ const ProgressBar = require('progress');
       return search();
     }
     if (parsedLink[1] !== 'tracks') {
-      for (let i = 0; i < config.threads; i++)
+      for (let i = 0; i < config.threads && download_query.length; i++)
       download(parsedLink[1], parsedLink[1] === 'playlists' ? response.data.result.playlists[parsedLink[2]].title : response.data.result.releases[parsedLink[2]].artist_names[0])
     }
     else download(parsedLink[1]);
@@ -83,16 +86,20 @@ const ProgressBar = require('progress');
     if (type === 'tracks') { // Для треков и плейлистов каждый раз нужно качать обложку, ибо она может различаться
         await fs.promises.mkdir(`${folder}/${track.artist_names[0]}`, { recursive: true });
       download_path = `${folder}/${track.artist_names[0]}`;
+      downloadCover(track.image.src, download_path, type, track.title);
+
     }
-    if (type === 'releases') {// При первом создании альбомных папок можно наверн сразу качать обложку
-      await fs.promises.mkdir(`${folder}/${title}}`, { recursive: true });
+    if (type === 'releases') {// При первом создании альбомных папок можно наверн сразу качать обложку  
       await fs.promises.mkdir(`${folder}/${title}/${track.release_title}`, { recursive: true });
       download_path = `${folder}/${title}/${track.release_title}`;
+      if (!fs.existsSync(`${download_path}/cover.jpg`))
+        downloadCover(track.image.src, download_path, type);
     }
 
     if (type === 'playlists') {
       await fs.promises.mkdir(`${folder}/${title}`, { recursive: true });
       download_path = `${folder}/${title}`;
+      downloadCover(track.image.src, download_path, type, track.title);
     }
     //
 
@@ -116,6 +123,20 @@ const ProgressBar = require('progress');
         renderThrottle: 0,
         total: parseInt(totalLength),
         callback: () => {
+          const data = {
+              title: track.title,
+              artist: track.artist_names.join(', '),
+              album: track.release_title,
+              track: track.position,
+              genre: track.genres.join(', '),
+          };
+          console.log(`${download_path}/${type !== 'releases' ? track.title : 'cover'}.jpg`);
+          const options = {
+            attachments: [resolve(`${download_path}/${type !== 'releases' ? track.title : 'cover'}.jpg`)]
+          };
+          ffmetadata.write(`${download_path}/${type === 'tracks' ? '' : track.position < 10 ? '0' + track.position + '. ' : track.position + '. '}${track.artist_names[0]} - ${track.title}.${streamUrl.data.result.stream.includes('streamfl') ? 'flac' : 'mp3'}`, data, options, function(err) {
+            if (err) console.error("Error writing metadata", err);
+          });
           if (download_query.length) {
             return download(type, title);
           }
@@ -148,5 +169,14 @@ const ProgressBar = require('progress');
     }
 
     return [link, link_type, link_id];
+  }
+
+  async function downloadCover(url, path, type, name) {
+    const { data, headers } = await axios(url.replace('{size}', config.coverSize || '1024x1024'), {
+      method: 'get',
+      responseType: 'stream'
+    });
+    const writer = fs.createWriteStream(`${path}/${type !== 'releases' ? `${name}.jpg` : 'cover.jpg'}`);
+    data.pipe(writer);
   }
 })();

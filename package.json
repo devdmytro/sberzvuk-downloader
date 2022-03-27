@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "axios": "^0.26.1",
+    "ffmetadata": "^1.7.0",
+    "ffmpeg-static": "^5.0.0",
     "inquirer": "^8.2.2",
     "progress": "^2.0.3"
   },
