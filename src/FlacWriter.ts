@@ -147,7 +147,6 @@ export class FlacWriter implements Writer {
             let mdbVorbisPicture: any;
 
             processor.on("preprocess", (mdb: any) => {
-                console.log("preprocess");
                 // Remove existing VORBIS_COMMENT and PICTURE blocks, if any.
                 if (flacMetadata.Processor.MDB_TYPE_VORBIS_COMMENT === mdb.type) {
                     mdb.remove();
@@ -167,7 +166,6 @@ export class FlacWriter implements Writer {
             });
 
             processor.on("postprocess", (mdb: any) => {
-                console.log("postprocess");
                 if (flacMetadata.Processor.MDB_TYPE_VORBIS_COMMENT === mdb.type && mdb.vendor !== null) {
                     vendor = mdb.vendor;
                 }
