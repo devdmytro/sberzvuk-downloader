@@ -1,3 +1,4 @@
+#! /usr/bin/node
 import inquirer from "inquirer";
 import { Api } from "./api";
 import { ConfigManager } from "./Config";
