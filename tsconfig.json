@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+      "baseUrl": "src",
+      "rootDir": "src",
+      "outDir": "bin",
+      "target": "es5",
+      "module": "commonjs",
+      "lib": [
+        "ES2016"
+      ],
+      "allowJs": false,
+      "sourceMap": true,
+      "downlevelIteration": true,
+      "isolatedModules": true,
+      "strict": true,
+      "noFallthroughCasesInSwitch": true,
+      "moduleResolution": "Node",
+      "allowSyntheticDefaultImports": true,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "resolveJsonModule": true,
+      "skipLibCheck": true
+    },
+    "include": [
+      "typings.d.ts",
+      "src/**/*"
+    ], 
+    "exclude": [
+      "./node_modules"
+    ]
+  }
+  

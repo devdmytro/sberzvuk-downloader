@@ -1,2 +1,5 @@
 node_modules
 Downloads
+*.log
+bin
+config.json
