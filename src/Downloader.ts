@@ -101,7 +101,7 @@ export class Downloader {
         const { data, headers } = await this.api.get<ReadStream>(streamUrl.data.result.stream, { responseType: "stream" });
 
         const totalLength = headers["content-length"];
-        if (this.config.get("threads") === 1) { // надо перепилить
+        if (this.config.get("threads") === 1 && process.stdout.moveCursor) { // надо перепилить
             process.stdout.moveCursor(0, -1);
             process.stdout.clearLine(1);
         }
