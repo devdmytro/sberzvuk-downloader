@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, promises } from "fs";
 import { dirname, join } from "path";
 import inquirer from "inquirer";
 import { SZStreamQuality } from "./types";
+import { DEFAULT_FOLDER } from "./const";
 
 const { readFile, writeFile } = promises;
 
@@ -16,9 +17,7 @@ export interface IConfig {
 export class ConfigManager {
     isLoaded = false;
 
-    private config = {} as IConfig;
-
-    constructor(private file: string) {
+    constructor(private file: string, private config: Partial<IConfig> = {} as IConfig) {
         try {
             mkdirSync(dirname(file), { recursive: true });
         } catch (e) {
@@ -35,11 +34,12 @@ export class ConfigManager {
 
         this.isLoaded = false;
 
-        let config = {} as IConfig;
+        let config: IConfig;
 
         try {
-            config = JSON.parse(await readFile(file, "utf8"));
+            config = Object.assign({}, JSON.parse(await readFile(file, "utf8")), this.config);
         } catch (err) {
+            config = {} as IConfig;
             if (!existsSync(file)) {
                 writeFile(file, "{}", "utf8").catch(e => {
                     console.error("Missing permissions on the config file.", e);
@@ -62,7 +62,7 @@ export class ConfigManager {
         }
 
         if (typeof config.folder !== "string" || !config.folder.trim())
-            config.folder = `${__dirname}/Downloads`;
+            config.folder = DEFAULT_FOLDER;
 
         if (typeof config.quality !== "string" || !Object.values(SZStreamQuality).includes(config.quality)) {
             const { quality } = await inquirer.prompt<{ quality: SZStreamQuality }>([
@@ -92,8 +92,12 @@ export class ConfigManager {
         this.isLoaded = true;
     }
 
-    get<T extends keyof IConfig>(id: T): IConfig[T] {
-        return this.config[id];
+    get<T extends keyof IConfig>(id: T): Required<IConfig>[T] {
+        const value = this.config[id];
+        if (!value) {
+            throw new Error("Couldn't get key " + id);
+        }
+        return value as Required<IConfig>[T];
     }
 
     set<T extends keyof IConfig>(id: T, value: IConfig[T]) {

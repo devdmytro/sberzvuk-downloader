@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "axios": "^0.26.1",
+    "command-line-args": "^5.2.1",
+    "command-line-usage": "^6.1.1",
     "flac-metadata": "^0.1.1",
     "inquirer": "^8.2.2",
     "node-id3": "^0.2.3",
@@ -10,6 +12,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "devDependencies": {
+    "@types/command-line-args": "^5.2.0",
+    "@types/command-line-usage": "^5.0.2",
     "@types/inquirer": "^8.2.0",
     "@types/node": "^17.0.23",
     "@types/progress": "^2.0.5",

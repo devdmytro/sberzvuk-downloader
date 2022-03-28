@@ -1,12 +1,16 @@
 #! /usr/bin/node
 import inquirer from "inquirer";
+import { CommandLineArgsManager } from "./CommandLineArgs";
 import { Api } from "./api";
 import { ConfigManager } from "./Config";
 import { Downloader } from "./Downloader";
 
 const { SZ_CONFIG_PATH = `${__dirname}/../config.json` } = process.env;
 
-export const config = new ConfigManager(SZ_CONFIG_PATH);
+export const args = new CommandLineArgsManager();
+const { urls, ...cliConfig } = args.getArgs();
+
+export const config = new ConfigManager(SZ_CONFIG_PATH, cliConfig);
 export const api = new Api(config);
 
 export const downloader = new Downloader(api, config);
@@ -14,20 +18,25 @@ export const downloader = new Downloader(api, config);
 (async () => {
     await config.load();
 
-    const { link } = await inquirer.prompt<{ link: string }>(
+    if (urls?.length) {
+        for (const url of urls)
+            await downloader.search(downloader.parseLink(url));
+    }
+
+    const { url } = await inquirer.prompt<{ url: string }>(
         [
             {
                 type: "input",
-                name: "link",
+                name: "url",
                 message: "Enter link to track/album/playlist:",
                 validate(input) {
-                    const parsedLink = downloader.parseLink(input);
-                    return !!parsedLink[1] && !!parsedLink[2];
+                    const parsedURL = downloader.parseLink(input);
+                    return !!parsedURL[1] && !!parsedURL[2];
                 },
             },
         ],
     );
-    const parsedLink = downloader.parseLink(link);
+    const parsedURL = downloader.parseLink(url);
 
-    await downloader.search(parsedLink);
+    await downloader.search(parsedURL);
 })();
