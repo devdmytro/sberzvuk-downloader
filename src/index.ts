@@ -21,6 +21,7 @@ export const downloader = new Downloader(api, config);
     if (urls?.length) {
         for (const url of urls)
             await downloader.search(downloader.parseLink(url));
+        return process.exit(0);
     }
 
     const { url } = await inquirer.prompt<{ url: string }>(
