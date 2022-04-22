@@ -1,7 +1,7 @@
-import { createWriteStream, existsSync, ReadStream } from "fs";
+import { execSync } from "child_process";
+import { createWriteStream, existsSync } from "fs";
 import { mkdir } from "fs/promises";
 import { resolve } from "path";
-import ProgressBar from "progress";
 import { Api } from "./api";
 import { ConfigManager } from "./Config";
 import { PLAYLIST_REGEX, RELEASE_REGEX, TRACK_REGEX } from "./const";
@@ -93,44 +93,24 @@ export class Downloader {
             downloadPath = `${folder}/${title}`;
             await this.downloadCover(track.image.src, downloadPath, type, track.title);
         }
-        //
 
         // Get stream url
         const streamUrl = (await this.api.get("/api/tiny/track/stream", { params: { id: track.id, quality: track.highest_quality === "flac" ? quality : track.highest_quality !== quality && track.highest_quality === "mid" ? "mid" : "high" } }));
         if (!streamUrl) return;
-        const { data, headers } = await this.api.get<ReadStream>(streamUrl.data.result.stream, { responseType: "stream" });
-
-        const totalLength = headers["content-length"];
-        if (this.config.get("threads") === 1 && process.stdout.moveCursor) { // надо перепилить
-            process.stdout.moveCursor(0, -1);
-            process.stdout.clearLine(1);
-        }
         const extension = streamUrl.data.result.stream.includes("streamfl") ? "flac" : "mp3";
         const path = `${downloadPath}/${type === "tracks" ? "" : track.position < 10 ? "0" + track.position + ". " : track.position + ". "}${track.artist_names[0]} - ${track.title}.${extension}`;
-        const progressBar = new ProgressBar(`${type !== "tracks" ? `[${this.count - this.downloadQuery.length}/${this.count}]` : ""} ${track.artist_names[0]} - ${track.title} -> downloading [:bar] :percent :etas`, {
-            width: 20,
-            complete: "=",
-            incomplete: " ",
-            renderThrottle: 0,
-            total: parseInt(totalLength),
-        });
-
-        const writer = createWriteStream(path);
-        data.on("data", chunk => progressBar.tick(chunk.length));
-        data.on("end", () => {
-            const coverPath = resolve(`${downloadPath}/${type !== "releases" ? track.title : "cover"}.jpg`);
-            switch (extension) {
-                case "flac":
-                    this.flac.write(path, track, coverPath).then(() => this.download(type, title))
-                        .catch(() => null);
-                    break;
-                case "mp3":
-                    this.id3.write(path, track, coverPath).then(() => this.download(type, title))
-                        .catch(() => null);
-                    break;
-            }
-        });
-        data.pipe(writer);
+        execSync(`curl -Lo "${path}" "${streamUrl.data.result.stream}"`);
+        const coverPath = resolve(`${downloadPath}/${type !== "releases" ? track.title : "cover"}.jpg`);
+        switch (extension) {
+            case "flac":
+                await this.flac.write(path, track, coverPath).catch(console.error);
+                await this.download(type, title);
+                break;
+            case "mp3":
+                await this.id3.write(path, track, coverPath);
+                await this.download(type, title);
+                break;
+        }
     };
 
     // Parse link
@@ -140,7 +120,7 @@ export class Downloader {
         if (link.includes("&")) link = link.slice(0, link.indexOf("&"));
         if (link.endsWith("/")) link = link.slice(0, -1);
 
-        if (!link.includes("sber-zvuk.com"))
+        if (!link.includes("zvuk.com"))
             return [link, undefined, undefined];
 
         if (link.search(TRACK_REGEX) !== -1)
