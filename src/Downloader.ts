@@ -140,7 +140,7 @@ export class Downloader {
         if (link.includes("&")) link = link.slice(0, link.indexOf("&"));
         if (link.endsWith("/")) link = link.slice(0, -1);
 
-        if (!link.includes("sber-zvuk.com"))
+        if (!link.includes("zvuk.com"))
             return [link, undefined, undefined];
 
         if (link.search(TRACK_REGEX) !== -1)
